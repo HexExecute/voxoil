@@ -85,7 +85,7 @@ impl<L: Clone + Debug + Default> Builder<L> {
     ) -> Branch {
         if current_depth >= *max_depth {
             // Base case: create a leaf if we are at max depth
-            let mut leaves = Vec::new();
+            let mut leaves = Vec::with_capacity(64);
             let mut bitmask = 0u64;
             for i in 0..64 {
                 // TODO: Make these solid, we're only using one leaf, or, make it so that they can choose to also make random leaves (this would require some API architecture planning).
@@ -112,7 +112,7 @@ impl<L: Clone + Debug + Default> Builder<L> {
         }
 
         // Recursive step: create a branch
-        let mut child_branches = Vec::new();
+        let mut child_branches = Vec::with_capacity(64);
         let mut bitmask = 0u64;
         for i in 0..64 {
             // TODO: Make a variant that's random per-level its own method.

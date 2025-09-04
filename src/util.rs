@@ -62,31 +62,31 @@ macro_rules! with_slab_by_count {
     ($pool:expr, $count:expr, |$slab:ident| $body:expr) => {
         match $count {
             1 => {
-                let $slab = &$pool.slabs.0;
+                let $slab = &$pool.slab1;
                 $body
             }
             2 => {
-                let $slab = &$pool.slabs.1;
+                let $slab = &$pool.slab2;
                 $body
             }
             3..=4 => {
-                let $slab = &$pool.slabs.2;
+                let $slab = &$pool.slab4;
                 $body
             }
             5..=8 => {
-                let $slab = &$pool.slabs.3;
+                let $slab = &$pool.slab8;
                 $body
             }
             9..=16 => {
-                let $slab = &$pool.slabs.4;
+                let $slab = &$pool.slab16;
                 $body
             }
             17..=32 => {
-                let $slab = &$pool.slabs.5;
+                let $slab = &$pool.slab32;
                 $body
             }
             33..=64 => {
-                let $slab = &$pool.slabs.6;
+                let $slab = &$pool.slab64;
                 $body
             }
             _ => panic!("Invalid slab count provided. Must be between 1 and 64."),
@@ -105,31 +105,31 @@ macro_rules! with_slab_by_count_mut {
     ($pool:expr, $count:expr, |$slab:ident| $body:expr) => {
         match $count {
             1 => {
-                let $slab = &mut $pool.slabs.0;
+                let $slab = &mut $pool.slab1;
                 $body
             }
             2 => {
-                let $slab = &mut $pool.slabs.1;
+                let $slab = &mut $pool.slab2;
                 $body
             }
             3..=4 => {
-                let $slab = &mut $pool.slabs.2;
+                let $slab = &mut $pool.slab4;
                 $body
             }
             5..=8 => {
-                let $slab = &mut $pool.slabs.3;
+                let $slab = &mut $pool.slab8;
                 $body
             }
             9..=16 => {
-                let $slab = &mut $pool.slabs.4;
+                let $slab = &mut $pool.slab16;
                 $body
             }
             17..=32 => {
-                let $slab = &mut $pool.slabs.5;
+                let $slab = &mut $pool.slab32;
                 $body
             }
             33..=64 => {
-                let $slab = &mut $pool.slabs.6;
+                let $slab = &mut $pool.slab64;
                 $body
             }
             _ => panic!("Invalid slab count provided. Must be between 1 and 64."),
@@ -159,13 +159,13 @@ macro_rules! _push_to_slab {
 macro_rules! push_to_pool {
     ($pool:expr, $data:expr) => {
         match $data.len() {
-            1 => _push_to_slab!(&mut $pool.slabs.0, 1, $data),
-            2 => _push_to_slab!(&mut $pool.slabs.1, 2, $data),
-            3..=4 => _push_to_slab!(&mut $pool.slabs.2, 4, $data),
-            5..=8 => _push_to_slab!(&mut $pool.slabs.3, 8, $data),
-            9..=16 => _push_to_slab!(&mut $pool.slabs.4, 16, $data),
-            17..=32 => _push_to_slab!(&mut $pool.slabs.5, 32, $data),
-            33..=64 => _push_to_slab!(&mut $pool.slabs.6, 64, $data),
+            1 => _push_to_slab!(&mut $pool.slab1, 1, $data),
+            2 => _push_to_slab!(&mut $pool.slab2, 2, $data),
+            3..=4 => _push_to_slab!(&mut $pool.slab4, 4, $data),
+            5..=8 => _push_to_slab!(&mut $pool.slab8, 8, $data),
+            9..=16 => _push_to_slab!(&mut $pool.slab16, 16, $data),
+            17..=32 => _push_to_slab!(&mut $pool.slab32, 32, $data),
+            33..=64 => _push_to_slab!(&mut $pool.slab64, 64, $data),
             _ => panic!("Invalid slab count provided. Must be between 1 and 64."),
         }
     };
@@ -217,7 +217,7 @@ mod tests {
         let slab_index = push_to_pool!(&mut pool, data);
 
         // Data with length 3 should go into the slab for blocks of size 4.
-        let slab = &pool.slabs.2;
+        let slab = &pool.slab8;
         assert_eq!(slab_index, 0);
 
         let block = slab.get(slab_index).unwrap();

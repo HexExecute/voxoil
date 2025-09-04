@@ -8,22 +8,20 @@ pub type Block<T, const SIZE: usize> = [MaybeUninit<T>; SIZE];
 #[derive(Default)]
 pub struct Slab<T, const SIZE: usize> {
     pub blocks: Vec<Block<T, SIZE>>,
-    free_blocks: Vec<usize>,
+    pub free_blocks: Vec<usize>,
 }
 
 /// A pool of slabs for different block sizes.
 #[repr(C)]
 #[derive(Default, Debug)]
 pub struct SlabPool<T> {
-    pub slabs: (
-        Slab<T, 1>,
-        Slab<T, 2>,
-        Slab<T, 4>,
-        Slab<T, 8>,
-        Slab<T, 16>,
-        Slab<T, 32>,
-        Slab<T, 64>,
-    ),
+    pub slab1: Slab<T, 1>,
+    pub slab2: Slab<T, 2>,
+    pub slab4: Slab<T, 4>,
+    pub slab8: Slab<T, 8>,
+    pub slab16: Slab<T, 16>,
+    pub slab32: Slab<T, 32>,
+    pub slab64: Slab<T, 64>,
 }
 
 impl<T, const SIZE: usize> Slab<T, SIZE> {
@@ -86,36 +84,42 @@ impl<T, const SIZE: usize> Slab<T, SIZE> {
     pub fn get_mut(&mut self, index: usize) -> Option<&mut Block<T, SIZE>> {
         self.blocks.get_mut(index)
     }
+
+    /// Returns the memory footprint in bytes.
+    pub fn memory(&self) -> usize {
+        let mut size = 0;
+
+        size += std::mem::size_of::<Block<T, SIZE>>() * self.blocks.capacity();
+        size += std::mem::size_of::<usize>() * self.free_blocks.capacity();
+
+        size
+    }
 }
 
 impl<T> SlabPool<T> {
     /// Returns a new, empty slab pool.
     pub fn new() -> Self {
         Self {
-            slabs: (
-                Slab::new(),
-                Slab::new(),
-                Slab::new(),
-                Slab::new(),
-                Slab::new(),
-                Slab::new(),
-                Slab::new(),
-            ),
+            slab1: Slab::new(),
+            slab2: Slab::new(),
+            slab4: Slab::new(),
+            slab8: Slab::new(),
+            slab16: Slab::new(),
+            slab32: Slab::new(),
+            slab64: Slab::new(),
         }
     }
 
     /// Returns a new slab pool with the given capacities.
     pub fn with_capacities(capacities: (usize, usize, usize, usize, usize, usize, usize)) -> Self {
         Self {
-            slabs: (
-                Slab::with_capacity(capacities.0),
-                Slab::with_capacity(capacities.1),
-                Slab::with_capacity(capacities.2),
-                Slab::with_capacity(capacities.3),
-                Slab::with_capacity(capacities.4),
-                Slab::with_capacity(capacities.5),
-                Slab::with_capacity(capacities.6),
-            ),
+            slab1: Slab::with_capacity(capacities.0),
+            slab2: Slab::with_capacity(capacities.1),
+            slab4: Slab::with_capacity(capacities.2),
+            slab8: Slab::with_capacity(capacities.3),
+            slab16: Slab::with_capacity(capacities.4),
+            slab32: Slab::with_capacity(capacities.5),
+            slab64: Slab::with_capacity(capacities.6),
         }
     }
 
@@ -124,6 +128,21 @@ impl<T> SlabPool<T> {
         Self::with_capacities((
             capacity, capacity, capacity, capacity, capacity, capacity, capacity,
         ))
+    }
+
+    /// Returns the memory footprint in bytes.
+    pub fn memory(&self) -> usize {
+        let mut size = 0;
+
+        size += self.slab1.memory();
+        size += self.slab2.memory();
+        size += self.slab4.memory();
+        size += self.slab8.memory();
+        size += self.slab16.memory();
+        size += self.slab32.memory();
+        size += self.slab64.memory();
+
+        size
     }
 }
 

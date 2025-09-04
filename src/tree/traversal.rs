@@ -5,7 +5,16 @@ use std::{
 
 use arrayvec::ArrayVec;
 
-use crate::tree::{Tree, branch::Address};
+use crate::tree::{
+    Tree,
+    branch::{Address, Branch},
+    leaf::Leaf,
+};
+
+pub enum Node<'a, L> {
+    Branch(&'a Branch),
+    Leaf(&'a Leaf<L>),
+}
 
 /// An index within a branch's bitmask (0..=63), the child slot only indexes *set bits* in the bitmask.
 #[repr(transparent)]
